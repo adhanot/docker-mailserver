@@ -1,0 +1,54 @@
+version: '3.3'
+
+services:
+  rainloop:
+    image: hardware/rainloop
+    volumes:
+      - ./data:/var/www/rainloop/data
+    depends_on:
+      - mail
+    ports:
+      - "8888:8888"
+
+  mail:
+    image: mailserver/docker-mailserver:latest
+    hostname: mail
+    domainname: detech.me
+    container_name: mail
+    ports:
+      - "25:25"
+      - "587:587"
+      - "465:465"
+      - "110:110"
+      - "143:143"
+    volumes:
+      - ./data/:/var/mail/
+      - ./state/:/var/mail-state/
+      - ./config/:/tmp/docker-mailserver/
+      - /etc/letsencrypt/:/etc/letsencrypt/
+    environment:
+      - ONE_DIR=1
+      - ENABLE_SRS=1
+      - ENABLE_POP3=1
+      - SPOOF_PROTECTION=1
+      - SSL_TYPE=manual
+      - SSL_CERT_PATH=/etc/letsencrypt/live/mail.detech.me/fullchain.pem
+      - SSL_KEY_PATH=/etc/letsencrypt/live/mail.detech.me/privkey.pem
+      - POSTFIX_MAILBOX_SIZE_LIMIT=1024000000
+      - POSTFIX_MESSAGE_SIZE_LIMIT=20480000
+      - ENABLE_SPAMASSASSIN=1
+      - SPAMASSASSIN_SPAM_TO_INBOX=1
+      - MOVE_SPAM_TO_JUNK=1
+      - SA_SPAM_SUBJECT="[SPAM]"
+      - SA_TAG=3.0
+      - SA_TAG2=3.8
+      - REPORT_INTERVAL=weekly
+      - TLS_LEVEL=intermediate
+      - PFLOGSUMM_TRIGGER=logrotate
+      - ENABLE_CLAMAV=1
+      - ENABLE_FAIL2BAN=1
+      - ENABLE_POSTGREY=1
+
+    cap_add:
+    - NET_ADMIN
+    - SYS_PTRACE
